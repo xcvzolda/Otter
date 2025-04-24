@@ -1,6 +1,6 @@
 Otter is an Linux shell repo. Just like Pacman or APT. But with the diffrence that most of the packages are from other sources. (Old packages will be stored in another repo)
 Even if you want to install Chrome OS, Windows, Other distros of linux. Otter can flash the image directly to the USB or SD card without the user doing it manually
-# Install using: sudo apt install git && sudo git clone git clone https://github.com/xcvzolda/Otter.git && cd Otter && sudo chmod +x install.sh && sudo ./install.sh
+# Install using: sudo apt install git && sudo git clone https://github.com/xcvzolda/Otter.git && cd Otter && sudo chmod +x install.sh && sudo ./install.sh
 # Clean things up using: rm -rf Otter
 # FAQ
 # How to use it?
