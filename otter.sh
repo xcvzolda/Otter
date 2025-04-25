@@ -7,6 +7,8 @@ OTTER_SCRIPT_PATH="/usr/local/bin/otter"
 if [ ! -d "$REPO_DIR" ]; then
     echo "Repository not found. Cloning from GitHub..."
     git clone --depth=1 https://github.com/xcvzolda/otter-repo.git "$REPO_DIR"
+    rm -rf "$REPO_DIR/.git"
+    echo ".git folder removed to clean up cloned repo."
 fi
 
 # Function to display available commands
@@ -68,10 +70,12 @@ function search_and_install {
     fi
 }
 
-# Function to update repository
+# Function to update repository and remove .git folder
 function update_repo {
     echo "Updating repository..."
     cd "$REPO_DIR" && git pull
+    rm -rf "$REPO_DIR/.git"
+    echo ".git folder removed after updating repo."
 }
 
 # Function to delete otter (removes repo and otter.sh)
