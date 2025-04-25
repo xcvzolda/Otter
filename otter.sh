@@ -13,16 +13,41 @@ fi
 function show_help {
     echo "Available commands:"
     echo "  help          - Show all commands"
-    echo "  install-gui   - Show all packages"
+    echo "  install-gui   - Show all packages and allow selection"
     echo "  install <name> - Search & install package with sudo"
     echo "  delete        - Deletes otter (must use '--otter' at the end)"
     echo "  update-repo   - Updates the repository"
 }
 
-# Function to list available subdirectories (excluding README and LICENSE)
-function list_subdirs {
+# Function to list available packages and allow selection
+function install_gui {
     echo "Available packages:"
-    find "$REPO_DIR" -mindepth 1 -maxdepth 1 -type d -printf "%f\n"
+    mapfile -t packages < <(find "$REPO_DIR" -mindepth 1 -maxdepth 1 -type d -printf "%f\n")
+
+    if [ ${#packages[@]} -eq 0 ]; then
+        echo "No GUI packages found."
+        return
+    fi
+
+    select pkg in "${packages[@]}" "Cancel"; do
+        if [[ "$pkg" == "Cancel" ]]; then
+            echo "Installation cancelled."
+            return
+        elif [[ -n "$pkg" ]]; then
+            INSTALL_SCRIPT=$(find "$REPO_DIR/$pkg" -type f -name "install*.sh" | head -n 1)
+
+            if [ -n "$INSTALL_SCRIPT" ]; then
+                echo "Found installation script: $INSTALL_SCRIPT"
+                chmod +x "$INSTALL_SCRIPT"
+                sudo "$INSTALL_SCRIPT"
+            else
+                echo "No installation script found for '$pkg'."
+            fi
+            break
+        else
+            echo "Invalid selection. Try again."
+        fi
+    done
 }
 
 # Function to search all folders for a matching installation script and execute it with sudo
@@ -65,7 +90,7 @@ function delete_otter {
 # Command handling
 case "$1" in
     help) show_help ;;
-    install-gui) list_subdirs ;;
+    install-gui) install_gui ;;
     install) search_and_install "$2" ;;
     delete) delete_otter "$2" ;;
     update-repo) update_repo ;;
