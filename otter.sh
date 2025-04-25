@@ -12,41 +12,45 @@ fi
 # Function to display available commands
 function show_help {
     echo "Available commands:"
-    echo "  help          - Show all commands"
-    echo "  install-gui   - Show all packages and allow selection"
+    echo "  help           - Show all commands"
+    echo "  install-gui    - Browse categories to install GUI packages"
     echo "  install <name> - Search & install package with sudo"
-    echo "  delete        - Deletes otter (must use '--otter' at the end)"
-    echo "  update-repo   - Updates the repository"
+    echo "  delete         - Deletes otter (must use '--otter' at the end)"
+    echo "  update-repo    - Updates the repository"
 }
 
-# Function to list available packages and allow selection
+# Function to navigate folders and select a package
 function install_gui {
-    echo "Available packages:"
-    mapfile -t packages < <(find "$REPO_DIR" -mindepth 1 -maxdepth 1 -type d -printf "%f\n")
+    local current_dir="$REPO_DIR"
 
-    if [ ${#packages[@]} -eq 0 ]; then
-        echo "No GUI packages found."
-        return
-    fi
+    while true; do
+        echo "Available categories/packages in: $current_dir"
+        mapfile -t entries < <(find "$current_dir" -mindepth 1 -maxdepth 1 -type d -or -type f -name "install*.sh" -printf "%f\n")
 
-    select pkg in "${packages[@]}" "Cancel"; do
-        if [[ "$pkg" == "Cancel" ]]; then
-            echo "Installation cancelled."
+        if [ ${#entries[@]} -eq 0 ]; then
+            echo "No packages or subdirectories found."
             return
-        elif [[ -n "$pkg" ]]; then
-            INSTALL_SCRIPT=$(find "$REPO_DIR/$pkg" -type f -name "install*.sh" | head -n 1)
-
-            if [ -n "$INSTALL_SCRIPT" ]; then
-                echo "Found installation script: $INSTALL_SCRIPT"
-                chmod +x "$INSTALL_SCRIPT"
-                sudo "$INSTALL_SCRIPT"
-            else
-                echo "No installation script found for '$pkg'."
-            fi
-            break
-        else
-            echo "Invalid selection. Try again."
         fi
+
+        select entry in "${entries[@]}" "Go Back" "Cancel"; do
+            if [[ "$entry" == "Cancel" ]]; then
+                echo "Installation cancelled."
+                return
+            elif [[ "$entry" == "Go Back" ]]; then
+                current_dir="${current_dir%/*}"
+                break
+            elif [[ -d "$current_dir/$entry" ]]; then
+                current_dir="$current_dir/$entry"
+                break
+            elif [[ -f "$current_dir/$entry" ]]; then
+                echo "Found installation script: $current_dir/$entry"
+                chmod +x "$current_dir/$entry"
+                sudo "$current_dir/$entry"
+                return
+            else
+                echo "Invalid selection. Try again."
+            fi
+        done
     done
 }
 
